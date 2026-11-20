@@ -1,0 +1,8 @@
+/_build/
+/out/
+**/.generated/
+.vscode/*.mplab-local.json
+.vscode/settings.json
+.vscode/*.backup
+/cmake/PICnUSB/default/CMakeLists.txt
+/cmake/PICnUSB/default/CMakePresets.json

@@ -1,0 +1,53 @@
+{
+    "version": "1.9",
+    "propertyGroups": [
+        {
+            "name": "default-XC8",
+            "type": "toolchain",
+            "provider": "microchip.toolchains:xc8@3.10",
+            "properties": {}
+        },
+        {
+            "name": "default-tool-base",
+            "type": "tool",
+            "properties": {
+                "programoptions.pgmentry.voltage": "low",
+                "programoptions.pgmspeed": "Min"
+            }
+        }
+    ],
+    "fileSets": [
+        {
+            "name": "default",
+            "files": [
+                "main.c",
+                {
+                    "include": "src/**/*.c"
+                },
+                {
+                    "include": "src/**/*.h"
+                }
+            ]
+        }
+    ],
+    "configurations": [
+        {
+            "name": "default",
+            "device": "PIC16F1455",
+            "imageType": "application",
+            "tool": "PICkit Basic",
+            "toolProperties": "default-tool-base",
+            "toolchain": "default-XC8",
+            "fileSet": "default",
+            "imagePath": "./out/PICnUSB/default.elf",
+            "packs": [
+                {
+                    "vendor": "Microchip",
+                    "name": "PIC12-16F1xxx_DFP",
+                    "version": "1.10.270"
+                }
+            ],
+            "includeLegacyMacros": true
+        }
+    ]
+}

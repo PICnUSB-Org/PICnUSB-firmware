@@ -1,0 +1,7 @@
+{
+  "mplab.clangd.languageSupportMode": "clangd",
+  "mplab.clangd.compileCommandsDir": "${workspaceFolder}/_build/PICnUSB/default",
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "cmake.sourceDirectory": "${workspaceFolder}/cmake/PICnUSB/default",
+  "cmake.useVsDeveloperEnvironment": "never"
+}

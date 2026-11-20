@@ -1,0 +1,4 @@
+# XC8 uses void main(void) as the embedded application entry point.
+# Its bundled clangd otherwise applies the hosted-C return-type diagnostic.
+Diagnostics:
+  Suppress: [main_returns_nonint]
