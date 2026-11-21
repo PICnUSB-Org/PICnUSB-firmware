@@ -13,7 +13,7 @@
 | --- | --- | --- |
 | Which compiler did the project request? | `.vscode/PICnUSB.mplab.json` | In `configurations[]`, `toolchain: default-XC8` points to the named `propertyGroups[]` entry whose provider is `microchip.toolchains:xc8@3.10`. The configuration itself holds the device and DFP version. |
 | Which probe properties apply? | Same file | Follow `toolProperties: default-tool-base` to the group containing `programoptions.pgmentry.voltage` and `programoptions.pgmspeed`. The connected unit's serial selection is local. |
-| Which source files enter the firmware? | `cmake/PICnUSB/default/user.cmake` | The project file set discovers files. The maintained CMake file replaces the compile target's source list and adds mode-specific sources. A file visible in Explorer can still be absent from the image. |
+| Which source files enter the firmware? | `.vscode/PICnUSB.mplab.json` | MPLAB and CI use the project's file set. `cmake/PICnUSB/default/user.cmake` adds the RGB driver. |
 | Where does the preset run? | `cmake/PICnUSB/default/CMakePresets.json` | Preset `PICnUSB_default_conf` uses Ninja and writes to `_build/PICnUSB/default`. Its toolchain comes from the adjacent `.generated` directory. |
 | Which compiler ran? | Generated toolchain and `compile_commands.json` | Look for the local `xc8-cc` executable, `-mcpu=16F1455`, the DFP path and the feature definitions on the entry for the application source. |
 | Why is the editor flagging a valid register? | `.vscode/settings.json` | Point `mplab.clangd.compileCommandsDir` at the active build directory. If needed, select the installed XC8 `xc8-clangd` via `mplab.clangd.path`. Rebuild to refresh the database after a mode or device change. |
@@ -38,6 +38,6 @@ try {
 
 - **Missing preset or toolchain file.** Check the working directory for the preset. Check `cmake/PICnUSB/default/.generated/toolchain.cmake` for the toolchain. A fresh checkout acquires that file through MPLAB generation. After moving a checkout, regenerate and inspect the absolute paths in the cache.
 - **Ninja unavailable.** Check the configured `CMAKE_MAKE_PROGRAM` path actually exists. An integrated terminal can have a different PATH from the extension. Set the local executable path and rerun configure.
-- **First configure fails downloading an archive.** Identify `mla_usb` or `pic16_rgb` in the error and check its declaration in `cmake/Dependencies.cmake`. For offline work, configure with `-DFETCHCONTENT_SOURCE_DIR_MLA_USB=<absolute extracted MLA root>` and/or `-DFETCHCONTENT_SOURCE_DIR_PIC16_RGB=<absolute RGB root>` using the pinned revisions. Keep the shared archive hashes intact.
-- **Undefined symbol at link time.** Inspect the compile database for its implementation file and active feature macros. Add an omitted application source under the matching condition in `user.cmake`. Reconfigure and build again.
+- **First configure fails downloading the PIC16-RGB archive.** Check its declaration in `cmake/PICnUSB/default/user.cmake`. For offline work, configure with `-DFETCHCONTENT_SOURCE_DIR_PIC16_RGB=<absolute RGB root>` using the pinned revision. Keep the archive hash intact.
+- **Undefined symbol at link time.** Inspect the compile database for its implementation file and active feature macros. Add an omitted source to the MPLAB project file set, then rebuild.
 - **Build succeeds with unexpected firmware behavior.** Inspect the `main.c` compile entry for effective definitions, then match the actual output path against the programmer's selected image. Multiple modes write the same `default.hex` name.

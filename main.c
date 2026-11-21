@@ -17,6 +17,7 @@
  */
 
 #include <xc.h>
+#include <ws2812.h>
 
 // Internal oscillator; no external clock or USB stack is required.
 #pragma config FOSC = INTOSC
@@ -39,14 +40,23 @@
 #pragma config LPBOR = OFF
 #pragma config LVP = ON
 
-#define _XTAL_FREQ 16000000UL
-
 void main(void) {
-  // Select 16 MHz HFINTOSC, with the PLL disabled.
-  OSCCON = 0x7C;
+  
+  // The WS2812 driver requires a stable 48 MHz system clock.
+  OSCCONbits.SCS = 0;
+  OSCCONbits.IRCF = 0xF;  // 16 MHz HFINTOSC.
+  OSCCONbits.SPLLMULT = 1;  // 3x PLL.
+  OSCCONbits.SPLLEN = 1;
 
-  // Add peripheral initialization here. Pins retain their reset input state.
+  while (!OSCSTATbits.PLLRDY) {
+  }
+
+  Ws2812Init(kWs2812ChainMain, 1);
+
   while (1) {
-    // Add application tasks here.
+    Ws2812SetColor(kWs2812ChainMain, 0, 255, 0, 0, 20);
+    __delay_ms(500);
+    Ws2812Clear(kWs2812ChainMain);
+    __delay_ms(500);
   }
 }

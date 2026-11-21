@@ -40,43 +40,39 @@ jobs:
         run: addlicense -check -ignore '_build/**' -ignore 'out/**' -ignore 'cmake/PICnUSB/**' .
 
   build:
-    name: PIC16F1455 / XC8 3.10
+    name: MPLAB firmware
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: Install build tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build
-      - name: Download XC8 and device pack
-        shell: bash
+          npm install --global @mplab/cli@0.9.6
+          mplab apps install cmake@4.5.0
+          mplab apps install ninja@1.13.2
+          mplab apps install make@4.4.1
+      - name: Install XC8
         run: |
           curl --fail --location --retry 3 --output "$RUNNER_TEMP/xc8-installer.run" \
             https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/SoftwareTools/xc8-v3.10-full-install-linux-x64-installer.run
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/device.atpack" \
-            https://packs.download.microchip.com/Microchip.PIC12-16F1xxx_DFP.1.10.270.atpack
           echo "628803b96f468a5981d6bc1d0a5e6c7fa809e4d87e3cca961805e2a857f5846e  $RUNNER_TEMP/xc8-installer.run" | sha256sum --check
-          echo "cf4f7a040259beea00ff06ea3a4152b62d1a7795a5d6c514a2c9d01736a1fd90  $RUNNER_TEMP/device.atpack" | sha256sum --check
-      - name: Install XC8 and extract device pack
-        shell: bash
-        run: |
           chmod +x "$RUNNER_TEMP/xc8-installer.run"
           sudo "$RUNNER_TEMP/xc8-installer.run" --mode unattended \
             --netservername localhost --prefix /opt/microchip/xc8/v3.10
-          python3 -m zipfile -e "$RUNNER_TEMP/device.atpack" "$RUNNER_TEMP/dfp"
-      - name: Configure
+      - name: Install MPLAB project packs
+        run: mplab packs install --project .vscode/PICnUSB.mplab.json
+      - name: Build MPLAB project
         run: >-
-          cmake -S . -B _build/ci -G Ninja
-          -DXC8_CC=/opt/microchip/xc8/v3.10/bin/xc8-cc
-          -DDFP_PATH="$RUNNER_TEMP/dfp/xc8"
-      - name: Build
-        run: cmake --build _build/ci --verbose
+          mplab project build .vscode/PICnUSB.mplab.json --configuration default
+          --toolchain /opt/microchip/xc8/v3.10
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
           name: PICnUSB-PIC16F1455
           path: |
-            out/ci/PICnUSB/default.elf
-            out/ci/PICnUSB/default.hex
+            out/PICnUSB/default.elf
+            out/PICnUSB/default.hex
           if-no-files-found: error
