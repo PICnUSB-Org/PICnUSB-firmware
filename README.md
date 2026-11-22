@@ -1,37 +1,116 @@
-# PICnUSB blank firmware
+# PICnUSB firmware
 
-A minimal XC8 application for the PIC16F1455, configured for the Microchip
-MPLAB extensions in Visual Studio Code. There are no USB, MCC, or external
-library dependencies. The application runs an empty loop at 16 MHz using
-HFINTOSC and leaves pins in their reset input state.
+A PIC16F1455 firmware project for MPLAB in Visual Studio Code. The default
+application uses PIC16-RGB to blink one WS2812 LED on RA5 (pin 2) at 20% red
+brightness, with 500 ms on and 500 ms off. It uses the internal oscillator
+and the 3× PLL to supply the driver's required 48 MHz clock.
 
-## Open and build
+## Set up a fresh checkout in VS Code
 
-1. Open this folder in VS Code and enable the **Microchip MPLAB Extension Pack**.
-   Copy [.vscode/settings.example.json](.vscode/settings.example.json) to
-   `.vscode/settings.json` for MPLAB clangd and CMake settings. If tool discovery
-   fails, set `cmake.cmakePath`, `cmake.configureSettings.CMAKE_MAKE_PROGRAM`
-   and `mplab.clangd.path` to the installed executables in that local file.
-2. In the MPLAB Projects view, select **PICnUSB / default**. If the project does
-   not appear, run **Developer: Reload Window**.
-3. Run **MPLAB: Edit Project Properties (UI)** to confirm the device is
-   **PIC16F1455**, the compiler is **XC8 3.10**, and the device pack is
-   **Microchip/PIC12-16F1xxx_DFP 1.10.270**.
-4. Run **MPLAB CMake: Build**. Use **Build (Production)** when offered for a
-   standalone image. MPLAB generates its CMake files and machine-local toolchain
-   on the first build; CMake and Ninja must be available through MPLAB discovery
-   or local VS Code settings.
+1. **Open the checkout.** In VS Code, use **File > Open Folder** and select the
+   folder containing `.vscode/PICnUSB.mplab.json`. Install the
+   **Microchip MPLAB Extension Pack** from Extensions. [Microchip setup guide](https://developerhelp.microchip.com/xwiki/bin/view/software-tools/ides/extensions/get-started/)
+2. **Set up the workspace.** Copy [.vscode/settings.example.json](.vscode/settings.example.json)
+   to `.vscode/settings.json`. If you already have a local settings file, merge
+   the example settings into it. In the MPLAB Projects view, select
+   **PICnUSB / default**. If it is missing, run **Developer: Reload Window**.
+3. **Install the compiler and device pack.** Make **MPLAB XC8 3.10** available
+   on your machine. In **MPLAB: Edit Project Properties (UI)**, verify that
+   **default** selects **PIC16F1455**, **XC8 3.10**, and
+   **Microchip/PIC12-16F1xxx_DFP 1.10.270**. If the pack is missing, install that
+   version from the MPLAB Packs view or download it and run **MPLAB: Install
+   local pack**. [XC8 downloads](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-compilers) · [Microchip device packs](https://packs.download.microchip.com/)
+4. **Generate and build.** Run **MPLAB CMake: Build (Production)** from the
+   Command Palette. Older extensions label it **Full Build (Production)**.
+   MPLAB needs CMake and Ninja and can discover them through its application
+   manager. The first configure downloads the pinned PIC16-RGB archive, so
+   it needs network access or the local override described below.
+5. **Check the outputs.** A successful build creates
+   `out/PICnUSB/default.elf` and `out/PICnUSB/default.hex`. MPLAB also creates
+   `_build/PICnUSB/default/compile_commands.json` for clangd. You can build
+   with the programmer disconnected.
 
-The configured image is `out/PICnUSB/default.elf`; XC8 also produces the HEX
-image for programming. A programmer does not need to be connected to build.
+If VS Code reports that it cannot find Ninja, add the directory containing
+`ninja.exe` to CMake's configure environment in your local `.vscode/settings.json`.
+Set `cmake.cmakePath` as well if CMake discovery fails. Replace the example
+paths with your installed locations.
+
+```json
+{
+  "cmake.cmakePath": "C:/path/to/cmake/bin/cmake.exe",
+  "cmake.configureEnvironment": {
+    "PATH": "C:/path/to/ninja;${env:PATH}"
+  }
+}
+```
+
+## Configure external libraries
+
+The tracked [user.cmake](cmake/PICnUSB/default/user.cmake) is where MPLAB
+loads firmware libraries for both VS Code and CI. It declares PIC16-RGB and
+MLA USB with pinned archive URLs and SHA-256 hashes. The default firmware
+fetches and uses PIC16-RGB. MLA USB is declared for future integration.
+
+### Change the RGB LED configuration
+
+1. Open `cmake/PICnUSB/default/user.cmake` and find `PIC16_RGB_CHAINS`. Its
+   default value `Main:RA5:1` defines the chain name, data GPIO, and maximum
+   number of LEDs. Separate multiple chain entries with semicolons.
+2. Edit the chain entry to match your board. If you change the name, use the
+   corresponding `kWs2812Chain<Name>` in [main.c](main.c). Pass the actual LED
+   count to `Ws2812Init()`. It must fit within the configured capacity.
+3. Run **MPLAB CMake: Clean and build (Production)**. If the cache still holds
+   the previous value, run
+   `cmake --preset PICnUSB_default_conf -U PIC16_RGB_CHAINS` from
+   `cmake/PICnUSB/default` to reload the default, then rebuild.
+
+### Use a local library checkout or build offline
+
+1. Clone the library or extract its archive. For a reproducible offline
+   build, use the revision pinned in `user.cmake`. For PIC16-RGB, the local
+   source directory must contain its `CMakeLists.txt`.
+2. Generate the MPLAB CMake files once. Run **MPLAB CMake: Build (Production)**
+   if this is a fresh checkout. You can continue once
+   `cmake/PICnUSB/default/CMakePresets.json` and
+   `cmake/PICnUSB/default/.generated/toolchain.cmake` exist, even if the
+   archive download failed.
+3. From the repository root, run the following with CMake and Ninja on your
+   terminal's PATH. Use an absolute path to your library directory.
+
+   ```sh
+   cd cmake/PICnUSB/default
+   cmake --preset PICnUSB_default_conf "-DFETCHCONTENT_SOURCE_DIR_PIC16_RGB:PATH=/absolute/path/to/PIC16-RGB"
+   cmake --build ../../../_build/PICnUSB/default
+   ```
+
+4. To return to the pinned download, run
+   `cmake --preset PICnUSB_default_conf -U FETCHCONTENT_SOURCE_DIR_PIC16_RGB`
+   from the same directory, then rebuild. The override is stored in the local
+   build cache. [CMake FetchContent overrides](https://cmake.org/cmake/help/latest/module/FetchContent.html#variable:FETCHCONTENT_SOURCE_DIR_%3CuppercaseName%3E)
+
+### Add or update a library
+
+1. In `user.cmake`, add or update its `FetchContent_Declare()` entry. For
+   archive dependencies, use an immutable release or commit and update the
+   URL and its SHA-256 hash together.
+2. Set any library options before calling `FetchContent_MakeAvailable()` with
+   the dependency name. For a library that exports a CMake target, add that
+   target to `target_link_libraries(PICnUSB_default_default_XC8_compile PRIVATE ...)`.
+   PIC16-RGB's `PIC16RGB::ws2812` target supplies its sources and include paths.
+   For a source-only library, add the required source files and include
+   directories to that compile target with `target_sources()` and
+   `target_include_directories()`. [CMake FetchContent guide](https://cmake.org/cmake/help/latest/module/FetchContent.html#typical-case)
+3. Rebuild under MPLAB and check the build output or `compile_commands.json`
+   for the expected sources and include paths. Commit the changes to
+   `user.cmake` so CI uses the same dependency configuration.
 
 ## Add your application
 
-Start in [main.c](./main.c). `_XTAL_FREQ` matches the configured 16 MHz clock
-for XC8 delay macros. Add C and header files under `src/`; the project's file
-set includes them. Use Project Properties to add other source locations.
-Keep persistent CMake customizations in `cmake/PICnUSB/default/user.cmake`
-after the first MPLAB build, rather than editing generated files.
+Start in [main.c](main.c). The PIC16-RGB header supplies `_XTAL_FREQ` for
+XC8 delay macros. Add C and header files under `src/` to use the existing
+file set. Use Project Properties to add other source locations. Keep CMake
+customizations in `cmake/PICnUSB/default/user.cmake` so they survive
+MPLAB regeneration.
 
 USB use requires additional clock and peripheral initialization and a USB stack.
 
@@ -48,22 +127,24 @@ by Git so compiler paths and probe bindings stay specific to your machine.
 
 ## Command-line and CI build
 
-The root CMake project provides a standalone production build without VS Code
-or generated MPLAB files. Install CMake 3.25 or later, Ninja, XC8 3.10 and
-Microchip/PIC12-16F1xxx_DFP 1.10.270, then run:
+GitHub Actions builds the same `.vscode/PICnUSB.mplab.json` project as VS Code.
+To run the headless build locally, use Node.js 24 and install the tools
+through MPLAB CLI:
 
 ```sh
-cmake -S . -B _build/ci -G Ninja -DXC8_CC=/path/to/xc8-cc -DDFP_PATH=/path/to/PIC12-16F1xxx_DFP/1.10.270/xc8
-cmake --build _build/ci
+npm install --global @mplab/cli@0.9.6
+mplab apps install cmake@4.5.0
+mplab apps install ninja@1.13.2
+mplab apps install make@4.4.1
+mplab apps install --project .vscode/PICnUSB.mplab.json
+mplab packs install --project .vscode/PICnUSB.mplab.json
+mplab project build .vscode/PICnUSB.mplab.json --configuration default
 ```
 
-Replace the two example paths with your installed compiler and pack paths.
-The output is `out/ci/PICnUSB/default.elf` and `default.hex`. This build uses
-the same device and source file set as the blank MPLAB project. Keep both
-configurations aligned when extending the project.
-
-GitHub Actions runs Google's `addlicense` and builds the firmware using the
-pinned XC8 and DFP versions. Successful builds upload ELF and HEX artifacts.
+The project JSON defines the application source list, device, compiler, and
+device pack. `cmake/PICnUSB/default/user.cmake` adds the pinned RGB driver and
+sets its LED pin. MPLAB generates the other CMake files. GitHub Actions
+uploads `out/PICnUSB/default.elf` and `out/PICnUSB/default.hex`.
 
 ## Licence and contributions
 

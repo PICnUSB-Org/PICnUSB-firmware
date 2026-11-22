@@ -6,3 +6,5 @@
 .vscode/*.backup
 /cmake/PICnUSB/default/CMakeLists.txt
 /cmake/PICnUSB/default/CMakePresets.json
+
+opencode.json

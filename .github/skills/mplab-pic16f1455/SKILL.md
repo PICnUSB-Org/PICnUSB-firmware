@@ -31,8 +31,8 @@ Use Ninja and CMake 3.25 or later for the version-6 preset. Let MPLAB discover i
 
 - Read `AGENTS.md`, `main.c` and the applicable module under `src/`. For peripheral work, check the PIC16F1455 pin table for the actual package and any shared functions. Use XC8's `<xc.h>` register names. For example, the default firmware samples AN3/RA4 and AN7/RC3. Check analog selection and pin direction before diagnosing ADC or digital input behavior. [Device data sheet and errata](https://www.microchip.com/en-us/product/PIC16F1455)
 - Keep configuration words together in `main.c`. The USB modes use 16 MHz HFINTOSC with the 3× PLL, wait for PLL readiness and use USB clock tuning. Preserve USB servicing in the polling loop when adding peripheral work. Keep `LVP = ON` for this board's low-voltage programming setup.
-- Register application C files in `cmake/PICnUSB/default/user.cmake` under the modes that use them. This file sets the compile target's source list explicitly. Check the active CMake cache when selecting a mode. ADC mode takes precedence over DAC mode. The first configure fetches the pinned MLA USB and PIC16-RGB dependencies declared in `cmake/Dependencies.cmake`.
-- On a fresh checkout or after a toolchain or pack change, run **MPLAB CMake: Build** (called **Full Build** in older releases). This generates the machine-local `.generated/toolchain.cmake` used by the preset. If that file is missing, repeat generation through MPLAB. Keep persistent changes in `user.cmake`.
+- Register application C files in the file set in `.vscode/PICnUSB.mplab.json`. Both MPLAB for VS Code and MPLAB CLI load the pinned PIC16-RGB dependency from `cmake/PICnUSB/default/user.cmake`.
+- On a fresh checkout or after a toolchain or pack change, run **MPLAB CMake: Build** (called **Full Build** in older releases). This generates the machine-local `.generated/toolchain.cmake` used by the preset. If that file is missing, repeat generation through MPLAB. CI also generates these files with `mplab project build`.
 
 After generation, run these PowerShell commands from the firmware root with CMake and Ninja on PATH. Proceed to the build only after configure succeeds.
 
