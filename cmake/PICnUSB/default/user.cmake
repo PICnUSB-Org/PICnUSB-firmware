@@ -36,10 +36,22 @@ FetchContent_Declare(pic16_rgb
 
 set(PIC16_RGB_MAX_LEDS 1 CACHE STRING "Buffered LEDs for the RGB chain")
 set(PIC16_RGB_CHAINS "Main:RA5:1" CACHE STRING "RGB LED on RA5 (pin 2)")
-FetchContent_MakeAvailable(pic16_rgb)
+FetchContent_MakeAvailable(pic16_rgb mla_usb)
 
-# Expose the resolved driver source to the HEX checker.
-set(PIC16_RGB_SOURCE_DIR "${pic16_rgb_SOURCE_DIR}" CACHE INTERNAL
-    "Resolved PIC16-RGB source directory" FORCE)
+set(PICNUSB_USB_VID "0x04D8" CACHE STRING "CDC Sense USB vendor ID")
+set(PICNUSB_USB_PID "0x000A" CACHE STRING "CDC Sense USB product ID")
 
-target_link_libraries(PICnUSB_default_default_XC8_compile PRIVATE PIC16RGB::ws2812)
+set(firmware_target PICnUSB_default_default_XC8_compile)
+set(project_root "${CMAKE_CURRENT_LIST_DIR}/../../..")
+target_link_libraries(${firmware_target} PRIVATE PIC16RGB::ws2812)
+target_sources(${firmware_target} PRIVATE
+    "${mla_usb_SOURCE_DIR}/src/usb_device.c"
+    "${mla_usb_SOURCE_DIR}/src/usb_device_cdc.c")
+target_include_directories(${firmware_target} PRIVATE
+    "${project_root}/src/board"
+    "${project_root}/examples/cdc-sense/sense"
+    "${project_root}/examples/cdc-sense/usb"
+    "${mla_usb_SOURCE_DIR}/inc")
+target_compile_definitions(${firmware_target} PRIVATE
+    PICNUSB_USB_VID=${PICNUSB_USB_VID}
+    PICNUSB_USB_PID=${PICNUSB_USB_PID})

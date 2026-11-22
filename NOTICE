@@ -3,3 +3,13 @@ Copyright 2026 Maxim Pavlov (MaxEELabs)
 
 Licensed under the Apache License, Version 2.0. See LICENSE.
 Source: https://github.com/PICnUSB-Org/PICnUSB-firmware
+
+Third-party libraries linked into the CDC Sense firmware
+
+PIC16-RGB, Copyright 2026 Maxim Pavlov (MaxEELabs)
+Licensed under the Apache License, Version 2.0.
+Source: https://github.com/max-eelabs/PIC16-RGB
+
+MLA USB v2.18, Copyright Microchip Technology Inc.
+Licensed under the Apache License, Version 2.0.
+Source: https://github.com/MicrochipTech/mla_usb
