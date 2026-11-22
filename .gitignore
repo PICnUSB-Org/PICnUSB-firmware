@@ -4,7 +4,7 @@
 .vscode/*.mplab-local.json
 .vscode/settings.json
 .vscode/*.backup
-/cmake/PICnUSB/default/CMakeLists.txt
-/cmake/PICnUSB/default/CMakePresets.json
+/cmake/PICnUSB/*/CMakeLists.txt
+/cmake/PICnUSB/*/CMakePresets.json
 
 opencode.json

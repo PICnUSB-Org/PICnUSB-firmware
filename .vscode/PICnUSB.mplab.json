@@ -20,12 +20,17 @@
         {
             "name": "default",
             "files": [
-                "main.c",
                 {
-                    "include": "src/**/*.c"
+                    "include": "src/board/*.c"
                 },
                 {
-                    "include": "src/**/*.h"
+                    "include": "src/board/*.h"
+                },
+                {
+                    "include": "examples/cdc-sense/**/*.h"
+                },
+                {
+                    "include": "examples/cdc-sense/**/*.c"
                 }
             ]
         }

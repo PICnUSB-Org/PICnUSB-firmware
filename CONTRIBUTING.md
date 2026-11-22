@@ -25,10 +25,10 @@ git commit -s -m "Describe your change"
 ## Changes and validation
 
 Keep pull requests focused and explain the change and how you checked it.
-Put application sources in `main.c` or `src/`. Keep the MPLAB project and
-command-line build in sync when adding compiler options or dependencies.
-Keep configuration words together in `main.c` and preserve `LVP = ON` for the
-board's low-voltage programming setup.
+Put each example under `examples/<name>/` and common board code under
+`src/board/`. Keep its MPLAB configuration, CMake dependencies, and CI in sync.
+Keep configuration words together in `src/board/board.c` and preserve `LVP = ON`
+for the board's low-voltage programming setup.
 
 Build with XC8 3.10 for PIC16F1455 before submitting. See the
 [README](README.md) for VS Code and command-line builds. For hardware changes,

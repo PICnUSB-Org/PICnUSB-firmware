@@ -13,10 +13,10 @@
 | --- | --- | --- |
 | Which compiler did the project request? | `.vscode/PICnUSB.mplab.json` | In `configurations[]`, `toolchain: default-XC8` points to the named `propertyGroups[]` entry whose provider is `microchip.toolchains:xc8@3.10`. The configuration itself holds the device and DFP version. |
 | Which probe properties apply? | Same file | Follow `toolProperties: default-tool-base` to the group containing `programoptions.pgmentry.voltage` and `programoptions.pgmspeed`. The connected unit's serial selection is local. |
-| Which source files enter the firmware? | `.vscode/PICnUSB.mplab.json` | MPLAB and CI use the project's file set. `cmake/PICnUSB/default/user.cmake` adds the RGB driver. |
+| Which source files enter the firmware? | `.vscode/PICnUSB.mplab.json` | MPLAB and CI use the project's file set. `cmake/PICnUSB/default/user.cmake` adds the RGB and USB drivers. |
 | Where does the preset run? | `cmake/PICnUSB/default/CMakePresets.json` | Preset `PICnUSB_default_conf` uses Ninja and writes to `_build/PICnUSB/default`. Its toolchain comes from the adjacent `.generated` directory. |
 | Which compiler ran? | Generated toolchain and `compile_commands.json` | Look for the local `xc8-cc` executable, `-mcpu=16F1455`, the DFP path and the feature definitions on the entry for the application source. |
-| Why is the editor flagging a valid register? | `.vscode/settings.json` | Point `mplab.clangd.compileCommandsDir` at the active build directory. If needed, select the installed XC8 `xc8-clangd` via `mplab.clangd.path`. Rebuild to refresh the database after a mode or device change. |
+| Why is the editor flagging a valid register? | `.vscode/settings.json` | Point `mplab.clangd.compileCommandsDir` at the active build directory. If needed, select the installed XC8 `xc8-clangd` via `mplab.clangd.path`. Rebuild to refresh the database after a configuration or device change. |
 
 For terminal builds, use the preset directory as the source directory. On a machine where MPLAB installed CMake and Ninja outside PATH, the following PowerShell example reads this checkout's existing local settings. Use it only when those settings contain valid absolute executable paths.
 
@@ -40,4 +40,4 @@ try {
 - **Ninja unavailable.** Check the configured `CMAKE_MAKE_PROGRAM` path actually exists. An integrated terminal can have a different PATH from the extension. Set the local executable path and rerun configure.
 - **First configure fails downloading the PIC16-RGB archive.** Check its declaration in `cmake/PICnUSB/default/user.cmake`. For offline work, configure with `-DFETCHCONTENT_SOURCE_DIR_PIC16_RGB=<absolute RGB root>` using the pinned revision. Keep the archive hash intact.
 - **Undefined symbol at link time.** Inspect the compile database for its implementation file and active feature macros. Add an omitted source to the MPLAB project file set, then rebuild.
-- **Build succeeds with unexpected firmware behavior.** Inspect the `main.c` compile entry for effective definitions, then match the actual output path against the programmer's selected image. Multiple modes write the same `default.hex` name.
+- **Build succeeds with unexpected firmware behavior.** Inspect the compile entry for the selected example and match the output path against the image selected by the programmer.

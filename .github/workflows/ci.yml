@@ -48,6 +48,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Test CDC Sense command handling
+        run: |
+          mkdir -p _build
+          cc -std=c99 -Wall -Wextra -Werror -I examples/cdc-sense/sense \
+            tests/cdc_sense_test.c examples/cdc-sense/sense/sense.c -o _build/cdc-sense-test
+          _build/cdc-sense-test
       - name: Install build tools
         run: |
           npm install --global @mplab/cli@0.9.6

@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <xc.h>
-#include <ws2812.h>
+#include "board.h"
 
-// Internal oscillator; no external clock or USB stack is required.
+#include <xc.h>
+
 #pragma config FOSC = INTOSC
 #pragma config WDTE = OFF
 #pragma config PWRTE = OFF
@@ -40,23 +40,11 @@
 #pragma config LPBOR = OFF
 #pragma config LVP = ON
 
-void main(void) {
-  
-  // The WS2812 driver requires a stable 48 MHz system clock.
+void BoardClockInit(void) {
   OSCCONbits.SCS = 0;
   OSCCONbits.IRCF = 0xF;  // 16 MHz HFINTOSC.
-  OSCCONbits.SPLLMULT = 1;  // 3x PLL.
+  OSCCONbits.SPLLMULT = 1;
   OSCCONbits.SPLLEN = 1;
-
   while (!OSCSTATbits.PLLRDY) {
-  }
-
-  Ws2812Init(kWs2812ChainMain, 1);
-
-  while (1) {
-    Ws2812SetColor(kWs2812ChainMain, 0, 255, 0, 0, 20);
-    __delay_ms(500);
-    Ws2812Clear(kWs2812ChainMain);
-    __delay_ms(500);
   }
 }
